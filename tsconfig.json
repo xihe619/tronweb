@@ -5,3 +5,56 @@
     },
     "include": ["src/**/*", "test/**/*"]
 }
+const TronWeb = require('tronweb');
+
+// 配置 TronWeb 实例
+const tronWeb = new TronWeb({
+  fullHost: 'https://api.trongrid.io', // Tron 主网
+  privateKey: 'YOUR_PRIVATE_KEY', // 替换为您的私钥
+});
+
+// 配置兑换码和对应奖励（单位为 TRX）
+const rewardTable = {
+  'CODE123': 10,  // 兑换码为 CODE123，奖励 10 TRX
+  'CODE456': 5,   // 兑换码为 CODE456，奖励 5 TRX
+};
+
+// 验证兑换码并发送奖励
+async function redeemCode(userAddress, code) {
+  // 检查兑换码是否存在
+  if (!rewardTable[code]) {
+    console.log('无效的兑换码');
+    return 'Invalid code';
+  }
+
+  const amount = rewardTable[code];
+  try {
+    // 转账交易
+    const transaction = await tronWeb.trx.sendTransaction(
+      userAddress,                // 接收地址
+      tronWeb.toSun(amount),      // 转账金额（TRX 转为 Sun）
+      tronWeb.defaultPrivateKey   // 使用钱包私钥签名
+    );
+
+    console.log(兑换成功！交易哈希: ${transaction.txid});
+    // 删除已使用的兑换码
+    delete rewardTable[code];
+
+    return Redeemed ${amount} TRX successfully! Transaction ID: ${transaction.txid};
+  } catch (error) {
+    console.error('兑换失败', error);
+    return 'Failed to redeem code';
+  }
+}
+
+// 示例：模拟用户输入
+(async () => {
+  const userAddress = 'USER_TRX_ADDRESS'; // 替换为用户的钱包地址
+  const userCode = 'CODE123';             // 用户输入的兑换码
+
+  const result = await redeemCode(userAddress, userCode);
+  console.log(result);
+})();
+
+
+---
